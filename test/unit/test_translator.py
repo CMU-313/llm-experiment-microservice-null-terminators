@@ -9,7 +9,7 @@ def test_chinese(monkeypatch):
 
     is_english, translated = translate_content(original)
     assert is_english is False
-    assert translated == "This is a Chinese message"
+    assert translated == "This is a Chinese message" 
 
 
 def test_no_language_recognized(monkeypatch):
