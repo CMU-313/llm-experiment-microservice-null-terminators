@@ -1,11 +1,20 @@
 import os
 import re
-from ollama import Client
+
+# `ollama` is an optional dependency at import time for tests. If it's not
+# available (for example in CI or a developer machine without the runtime
+# client), fall back to None and create a no-op client variable. The
+# functions that perform LLM calls will fail if actually invoked, but
+# unit tests typically monkeypatch those functions.
+try:
+    from ollama import Client
+except Exception:
+    Client = None
 
 # Configuration
 MODEL_NAME = "mistral:7b"
 OLLAMA_URL = os.getenv("OLLAMA_HOST", "localhost:11434")
-client = Client(host=OLLAMA_URL)
+client = Client(host=OLLAMA_URL) if Client is not None else None
 
 def clean_response(llm_response: str) -> str:
     match = re.search(r'<OUTPUT>(.*?)</OUTPUT>', llm_response, re.DOTALL)
@@ -69,8 +78,24 @@ Enclose your answer in <OUTPUT></OUTPUT> tags. Return English if you don't know.
 def translate_content(content: str) -> tuple[bool, str]:
     llm_translation = get_translation(content).strip()
     llm_lang_detection = get_language(content).strip()
+    # debug information kept intentionally for local runs
+    print(f"LLM Language Detection: {llm_lang_detection}")
 
     cleaned_translation = clean_response(llm_translation)
-    cleaned_lang_detection = clean_response(llm_lang_detection)
+    cleaned_lang_detection = clean_response(llm_lang_detection).strip()
 
-    return (cleaned_lang_detection.lower() == "english", cleaned_translation)
+    lang_lower = cleaned_lang_detection.lower()
+
+    # If the LLM explicitly says the input is English, return it as English
+    if lang_lower == "english":
+        return (True, cleaned_translation)
+
+    # If language detection failed, returned an unknown value, or indicates
+    # multiple languages, don't trust the translation; return the original
+    # content unchanged.
+    multiple_indicators = [",", ";", "/", "&", " and ", " & ", " and/or", "mixed", "multiple"]
+    if (not lang_lower) or "unknown" in lang_lower or any(ind in lang_lower for ind in multiple_indicators):
+        return (False, content)
+
+    # Otherwise we have a single non-English language; return the translation
+    return (False, cleaned_translation)
