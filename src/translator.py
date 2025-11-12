@@ -53,7 +53,7 @@ If you don't know how to translate it, return the word the same message enclosed
 def get_language(post: str) -> str:
     context = """
     I am going to give you an input message enclosed in <INPUT></INPUT> tags.
-Could you answer, in one English word, what language the input message is in? Don't provide any additional information.
+Could you answer, in one English word, what language the input message is in? If there is no language or more than one, return "unknown". Don't provide any additional information.
 Enclose your answer in <OUTPUT></OUTPUT> tags. Return English if you don't know."""
     
     response = client.chat(
@@ -94,7 +94,7 @@ def translate_content(content: str) -> tuple[bool, str]:
     # multiple languages, don't trust the translation; return the original
     # content unchanged.
     multiple_indicators = [",", ";", "/", "&", " and ", " & ", " and/or", "mixed", "multiple"]
-    if (not lang_lower) or "unknown" in lang_lower or any(ind in lang_lower for ind in multiple_indicators):
+    if (not lang_lower) or "unknown" in lang_lower or "emoji" in lang_lower or any(ind in lang_lower for ind in multiple_indicators):
         return (False, content)
 
     # Otherwise we have a single non-English language; return the translation
