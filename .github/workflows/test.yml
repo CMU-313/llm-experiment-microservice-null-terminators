@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install uv
+        run: pip install uv
+
       - name: Install Dependencies
         run: uv init && uv add -r requirements.txt
 
