@@ -95,7 +95,7 @@ def translate_content(content: str) -> tuple[bool, str]:
     # content unchanged.
     multiple_indicators = [",", ";", "/", "&", " and ", " & ", " and/or", "mixed", "multiple"]
     if (not lang_lower) or "unknown" in lang_lower or "emoji" in lang_lower or any(ind in lang_lower for ind in multiple_indicators):
-        return (False,  content)
+        return (False, content)
 
     # Otherwise we have a single non-English language; return the translation
     return (False, cleaned_translation)
