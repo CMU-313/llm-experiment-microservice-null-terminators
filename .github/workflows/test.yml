@@ -28,7 +28,7 @@ jobs:
         run: pip install uv
 
       - name: Install Dependencies
-        run: uv init && uv add -r requirements.txt
+        run: uv sync
 
       - name: Run tests
         run: uv run pytest
